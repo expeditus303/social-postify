@@ -12,22 +12,26 @@ export class MediasRepository {
       where: {
         title_username: {
           title: createMediaDto.title,
-          username: createMediaDto.username
-        }
-      }
-    })
+          username: createMediaDto.username,
+        },
+      },
+    });
   }
 
   create(createMediaDto: CreateMediaDto) {
-    return this.prisma.media.create({data: createMediaDto});
+    return this.prisma.media.create({ data: createMediaDto });
   }
 
   findAll() {
-    return this.prisma.media.findMany()
+    return this.prisma.media.findMany();
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} media`;
+    return this.prisma.media.findUnique({
+      where: {
+        id,
+      },
+    });
   }
 
   update(id: number, updateMediaDto: UpdateMediaDto) {

@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { MediasService } from './medias.service';
 import { CreateMediaDto } from './dto/create-media.dto';
 import { UpdateMediaDto } from './dto/update-media.dto';
@@ -9,22 +18,42 @@ export class MediasController {
 
   @Post()
   async create(@Body() createMediaDto: CreateMediaDto) {
-    return await this.mediasService.create(createMediaDto);
+    try {
+      return await this.mediasService.create(createMediaDto);
+    } catch (err) {
+      console.log(err);
+      throw new InternalServerErrorException();
+    }
   }
 
   @Get()
-  findAll() {
-    return this.mediasService.findAll();
+  async findAll() {
+    try {
+      return await this.mediasService.findAll();
+    } catch (err) {
+      throw new InternalServerErrorException(err);
+    }
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.mediasService.findOne(+id);
+  async findOne(@Param('id') id: string) {
+    try {
+      return this.mediasService.findOne(+id);
+    } catch (err) {
+      throw new InternalServerErrorException(err);
+    }
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateMediaDto: UpdateMediaDto) {
-    return this.mediasService.update(+id, updateMediaDto);
+  async update(
+    @Param('id') id: string,
+    @Body() updateMediaDto: UpdateMediaDto,
+  ) {
+    try {
+      return this.mediasService.update(+id, updateMediaDto);
+    } catch (err) {
+      throw new InternalServerErrorException(err);
+    }
   }
 
   @Delete(':id')
