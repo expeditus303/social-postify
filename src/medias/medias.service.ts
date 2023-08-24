@@ -5,10 +5,10 @@ import { MediasRepository } from './medias.repository';
 
 @Injectable()
 export class MediasService {
-  constructor(private readonly repository: MediasRepository) {}
+  constructor(private readonly mediasRepository: MediasRepository) {}
 
   create(createMediaDto: CreateMediaDto) {
-    return createMediaDto;
+    return this.mediasRepository.create(createMediaDto);
   }
 
   findAll() {

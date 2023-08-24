@@ -5,11 +5,10 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class MediasRepository {
-
   constructor(private readonly prisma: PrismaService) {}
 
   create(createMediaDto: CreateMediaDto) {
-    return createMediaDto;
+    return this.prisma.media.create({data: createMediaDto});
   }
 
   findAll() {
