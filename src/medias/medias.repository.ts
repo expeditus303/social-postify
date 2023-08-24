@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { CreateMediaDto } from './dto/create-media.dto';
 import { UpdateMediaDto } from './dto/update-media.dto';
-import { MediasRepository } from './medias.repository';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
-export class MediasService {
-  constructor(private readonly repository: MediasRepository) {}
+export class MediasRepository {
+
+  constructor(private readonly prisma: PrismaService) {}
 
   create(createMediaDto: CreateMediaDto) {
     return createMediaDto;

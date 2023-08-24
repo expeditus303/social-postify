@@ -5,7 +5,7 @@ export class CreateMediaDto {
     @IsNotEmpty()
     title: string
 
-    @IsUrl({}, {message: '$property must be a valid URL' })
+    @IsString()
     @IsNotEmpty()
     username: string 
 }
