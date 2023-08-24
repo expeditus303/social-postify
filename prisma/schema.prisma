@@ -23,6 +23,7 @@ model Media {
   username     String
   Publications Publication[]
 
+  @@unique([title, username])
   @@map("medias")
 }
 

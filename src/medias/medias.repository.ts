@@ -7,12 +7,23 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class MediasRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  findMediaByTitleAndUsername(createMediaDto: CreateMediaDto) {
+    return this.prisma.media.findUnique({
+      where: {
+        title_username: {
+          title: createMediaDto.title,
+          username: createMediaDto.username
+        }
+      }
+    })
+  }
+
   create(createMediaDto: CreateMediaDto) {
     return this.prisma.media.create({data: createMediaDto});
   }
 
   findAll() {
-    return `This action returns all medias`;
+    return this.prisma.media.findMany()
   }
 
   findOne(id: number) {
