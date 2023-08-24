@@ -57,7 +57,14 @@ export class MediasService {
     return await this.mediasRepository.update(id, updateMediaDto)
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} media`;
+  // TODO só pode ser deletada se não estiver fazendo parte de nenhuma publicação (agendada ou publicada). Neste caso, retornar o status code 403 Forbidden.
+  async remove(id: number) {
+    const existingMediaById = await this.mediasRepository.findOne(id);
+
+    if (!existingMediaById) {
+      throw new NotFoundException(`Media with ID ${id} not found.`);
+    }
+
+    return await this.mediasRepository.remove(id)
   }
 }

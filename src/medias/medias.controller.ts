@@ -57,7 +57,11 @@ export class MediasController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.mediasService.remove(+id);
+  async remove(@Param('id') id: string) {
+    try {
+      return this.mediasService.remove(+id);
+    } catch (err) {
+      throw new InternalServerErrorException(err);
+    }
   }
 }
