@@ -29,17 +29,32 @@ export class MediasService {
   }
 
   async findOne(id: number) {
-    const existingMedia = await this.mediasRepository.findOne(id);
+    const existingMediaById = await this.mediasRepository.findOne(id);
 
-    if (!existingMedia) {
+    if (!existingMediaById) {
       throw new NotFoundException(`Media with ID ${id} not found.`);
     }
 
-    return existingMedia;
+    return existingMediaById;
   }
 
-  update(id: number, updateMediaDto: UpdateMediaDto) {
-    return `This action updates a #${id} media`;
+  async update(id: number, updateMediaDto: UpdateMediaDto) {
+    const existingMediaById = await this.mediasRepository.findOne(id);
+
+    if (!existingMediaById) {
+      throw new NotFoundException(`Media with ID ${id} not found.`);
+    }
+
+    const existingMedia =
+      await this.mediasRepository.findMediaByTitleAndUsername(updateMediaDto);
+
+    if (existingMedia) {
+      throw new ConflictException(
+        'A media entry with this title and username already exists.',
+      );
+    }
+
+    return await this.mediasRepository.update(id, updateMediaDto)
   }
 
   remove(id: number) {
