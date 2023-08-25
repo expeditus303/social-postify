@@ -72,7 +72,13 @@ export class PublicationsService {
   }
 
   async findOne(id: number) {
-    return `This action returns a #${id} publication`;
+    const existingPublicationById = await this.publicationsRepository.findOne(id);
+
+    if (!existingPublicationById) {
+      throw new NotFoundException(`Publication with ID ${id} not found.`);
+    }
+
+    return existingPublicationById;
   }
 
   async update(id: number, updatePublicationDto: UpdatePublicationDto) {
