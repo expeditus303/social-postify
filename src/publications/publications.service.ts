@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreatePublicationDto } from './dto/create-publication.dto';
 import { UpdatePublicationDto } from './dto/update-publication.dto';
 import { PublicationsRepository } from './publications.repository';
@@ -96,7 +100,9 @@ export class PublicationsService {
     const currentDate = new Date();
 
     if (publicationDate < currentDate) {
-      throw new ForbiddenException("Updating published publications is not allowed.");
+      throw new ForbiddenException(
+        'Updating published publications is not allowed.',
+      );
     }
 
     const { mediaId, postId } = updatePublicationDto;
@@ -112,10 +118,17 @@ export class PublicationsService {
       throw new NotFoundException(`Post with ID ${postId} not found.`);
     }
 
-    return await this.publicationsRepository.update(id, updatePublicationDto)
+    return await this.publicationsRepository.update(id, updatePublicationDto);
   }
 
   async remove(id: number) {
-    return `This action removes a #${id} publication`;
+    const existingPublicationById =
+      await this.publicationsRepository.findOne(id);
+
+    if (!existingPublicationById) {
+      throw new NotFoundException(`Publication with ID ${id} not found.`);
+    }
+
+    return await this.publicationsRepository.remove(id);
   }
 }
