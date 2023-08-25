@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePublicationDto } from './dto/create-publication.dto';
 import { UpdatePublicationDto } from './dto/update-publication.dto';
 import { PublicationsRepository } from './publications.repository';
@@ -56,7 +56,9 @@ export class PublicationsService {
           const latestDate = currentDate > afterDate ? currentDate : afterDate;
 
           const notPublishedAfterDate =
-            await this.publicationsRepository.findNotPublishedAfterDate(latestDate);
+            await this.publicationsRepository.findNotPublishedAfterDate(
+              latestDate,
+            );
 
           return notPublishedAfterDate;
         }
@@ -72,7 +74,8 @@ export class PublicationsService {
   }
 
   async findOne(id: number) {
-    const existingPublicationById = await this.publicationsRepository.findOne(id);
+    const existingPublicationById =
+      await this.publicationsRepository.findOne(id);
 
     if (!existingPublicationById) {
       throw new NotFoundException(`Publication with ID ${id} not found.`);
@@ -82,7 +85,34 @@ export class PublicationsService {
   }
 
   async update(id: number, updatePublicationDto: UpdatePublicationDto) {
-    return `This action updates a #${id} publication`;
+    const existingPublicationById =
+      await this.publicationsRepository.findOne(id);
+
+    if (!existingPublicationById) {
+      throw new NotFoundException(`Publication with ID ${id} not found.`);
+    }
+
+    const publicationDate = new Date(existingPublicationById.date);
+    const currentDate = new Date();
+
+    if (publicationDate < currentDate) {
+      throw new ForbiddenException("Updating published publications is not allowed.");
+    }
+
+    const { mediaId, postId } = updatePublicationDto;
+
+    const existingMediaById = await this.mediasService.findMediaById(mediaId);
+    const existingPostById = await this.postsService.findPostById(postId);
+
+    if (!existingMediaById) {
+      throw new NotFoundException(`Media with ID ${mediaId} not found.`);
+    }
+
+    if (!existingPostById) {
+      throw new NotFoundException(`Post with ID ${postId} not found.`);
+    }
+
+    return await this.publicationsRepository.update(id, updatePublicationDto)
   }
 
   async remove(id: number) {

@@ -68,7 +68,12 @@ export class PublicationsRepository {
   }
 
   update(id: number, updatePublicationDto: UpdatePublicationDto) {
-    return `This action updates a #${id} publication`;
+    return this.prisma.publication.update({
+      where: {
+        id
+      },
+      data: updatePublicationDto
+    })
   }
 
   remove(id: number) {
