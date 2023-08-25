@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PostsRepository } from './posts.repository';
@@ -7,23 +7,28 @@ import { PostsRepository } from './posts.repository';
 export class PostsService {
   constructor(private readonly postsRepository: PostsRepository) {}
 
-  create(createPostDto: CreatePostDto) {
-    return this.postsRepository.create(createPostDto)
+  async create(createPostDto: CreatePostDto) {
+    return await this.postsRepository.create(createPostDto);
   }
 
-  findAll() {
-    return this.postsRepository.findAll()
+  async findAll() {
+    return await this.postsRepository.findAll();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} post`;
+  async findOne(id: number) {
+    const existingPostById = await this.postsRepository.findOne(id);
+
+    if (!existingPostById) {
+      throw new NotFoundException(`Post with ID ${id} not found.`);
+    }
+    return existingPostById
   }
 
-  update(id: number, updatePostDto: UpdatePostDto) {
-    return `This action updates a #${id} post`;
+  async update(id: number, updatePostDto: UpdatePostDto) {
+    return await `This action updates a #${id} post`;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} post`;
+  async remove(id: number) {
+    return await `This action removes a #${id} post`;
   }
 }

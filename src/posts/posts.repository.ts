@@ -14,11 +14,15 @@ export class PostsRepository {
   }
 
   findAll() {
-    return this.prisma.post.findMany()
+    return this.prisma.post.findMany();
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} post`;
+    return this.prisma.post.findUnique({
+      where: {
+        id,
+      },
+    });
   }
 
   update(id: number, updatePostDto: UpdatePostDto) {
