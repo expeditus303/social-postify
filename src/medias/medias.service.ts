@@ -1,15 +1,23 @@
 import {
   ConflictException,
+  ForbiddenException,
+  Inject,
   Injectable,
   NotFoundException,
+  forwardRef,
 } from '@nestjs/common';
 import { CreateMediaDto } from './dto/create-media.dto';
 import { UpdateMediaDto } from './dto/update-media.dto';
 import { MediasRepository } from './medias.repository';
+import { PublicationsService } from 'src/publications/publications.service';
 
 @Injectable()
 export class MediasService {
-  constructor(private readonly mediasRepository: MediasRepository) {}
+  constructor(
+    @Inject(forwardRef(() => PublicationsService))
+    private readonly publicationsService: PublicationsService,
+    private readonly mediasRepository: MediasRepository,
+    ) {}
 
   async create(createMediaDto: CreateMediaDto) {
     const existingMedia =
@@ -63,6 +71,12 @@ export class MediasService {
 
     if (!existingMediaById) {
       throw new NotFoundException(`Media with ID ${id} not found.`);
+    }
+
+    const mediaHasPublication = await this.publicationsService.findPublicationWithMediaId(id)
+
+    if (mediaHasPublication) {
+      throw new ForbiddenException(`The media with ID ${id} is associated with a publication and cannot be deleted.`);
     }
 
     return await this.mediasRepository.remove(id)

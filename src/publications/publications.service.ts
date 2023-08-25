@@ -1,7 +1,9 @@
 import {
   ForbiddenException,
+  Inject,
   Injectable,
   NotFoundException,
+  forwardRef,
 } from '@nestjs/common';
 import { CreatePublicationDto } from './dto/create-publication.dto';
 import { UpdatePublicationDto } from './dto/update-publication.dto';
@@ -12,8 +14,9 @@ import { PostsService } from 'src/posts/posts.service';
 @Injectable()
 export class PublicationsService {
   constructor(
-    private readonly publicationsRepository: PublicationsRepository,
+    @Inject(forwardRef(() => MediasService))
     private readonly mediasService: MediasService,
+    private readonly publicationsRepository: PublicationsRepository,
     private readonly postsService: PostsService,
   ) {}
 
@@ -142,5 +145,13 @@ export class PublicationsService {
       await this.publicationsRepository.findNotPublished(currentDate);
 
     return notPublishedPublications;
+  }
+
+  async findPublicationWithMediaId(mediaId: number) {
+    return await this.publicationsRepository.findPublicationWithMediaId(mediaId)
+  }
+
+  async findPublicationWithPostId(postId: number) {
+    return await this.publicationsRepository.findPublicationWithPostId(postId)
   }
 }

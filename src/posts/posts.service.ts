@@ -1,11 +1,22 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Inject,
+  Injectable,
+  NotFoundException,
+  forwardRef,
+} from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PostsRepository } from './posts.repository';
+import { PublicationsService } from 'src/publications/publications.service';
 
 @Injectable()
 export class PostsService {
-  constructor(private readonly postsRepository: PostsRepository) {}
+  constructor(
+    @Inject(forwardRef(() => PublicationsService))
+    private readonly publicationsService: PublicationsService,
+    private readonly postsRepository: PostsRepository,
+  ) {}
 
   async create(createPostDto: CreatePostDto) {
     return await this.postsRepository.create(createPostDto);
@@ -41,6 +52,12 @@ export class PostsService {
 
     if (!existingMediaById) {
       throw new NotFoundException(`Post with ID ${id} not found.`);
+    }
+
+    const postHasPublication = await this.publicationsService.findPublicationWithPostId(id)
+
+    if (postHasPublication) {
+      throw new ForbiddenException(`The post with ID ${id} is associated with a publication and cannot be deleted.`);
     }
 
     return await this.postsRepository.remove(id);

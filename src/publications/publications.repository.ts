@@ -5,7 +5,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class PublicationsRepository {
-
+  
   constructor(private readonly prisma: PrismaService) {}
 
   create(createPublicationDto: CreatePublicationDto) {
@@ -62,24 +62,40 @@ export class PublicationsRepository {
   findOne(id: number) {
     return this.prisma.publication.findUnique({
       where: {
-        id
-      }
-    })
+        id,
+      },
+    });
   }
 
   update(id: number, updatePublicationDto: UpdatePublicationDto) {
     return this.prisma.publication.update({
       where: {
-        id
+        id,
       },
-      data: updatePublicationDto
-    })
+      data: updatePublicationDto,
+    });
   }
 
   remove(id: number) {
     return this.prisma.publication.delete({
       where: {
-        id
+        id,
+      },
+    });
+  }
+
+  findPublicationWithMediaId(mediaId: number) {
+    return this.prisma.publication.findFirst({
+      where: {
+        mediaId
+      }
+    })
+  }
+
+  findPublicationWithPostId(postId: number) {
+    return this.prisma.publication.findFirst({
+      where: {
+        postId
       }
     })
   }
