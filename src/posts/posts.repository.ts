@@ -26,7 +26,16 @@ export class PostsRepository {
   }
 
   update(id: number, updatePostDto: UpdatePostDto) {
-    return `This action updates a #${id} post`;
+    return this.prisma.post.update({
+      where: {
+        id
+      },
+      data: {
+        title: updatePostDto.title,
+        text: updatePostDto.text,
+        image: 'image' in updatePostDto ? updatePostDto.image : null
+      }
+    })
   }
 
   remove(id: number) {

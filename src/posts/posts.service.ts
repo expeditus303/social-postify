@@ -21,11 +21,18 @@ export class PostsService {
     if (!existingPostById) {
       throw new NotFoundException(`Post with ID ${id} not found.`);
     }
-    return existingPostById
+    
+    return existingPostById;
   }
 
   async update(id: number, updatePostDto: UpdatePostDto) {
-    return await `This action updates a #${id} post`;
+    const existingPostById = await this.postsRepository.findOne(id);
+
+    if (!existingPostById) {
+      throw new NotFoundException(`Post with ID ${id} not found.`);
+    }
+
+    return await this.postsRepository.update(id, updatePostDto);
   }
 
   async remove(id: number) {
