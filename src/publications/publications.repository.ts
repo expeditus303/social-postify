@@ -15,7 +15,7 @@ export class PublicationsRepository {
   }
 
   findAll() {
-    return `This action returns all publications`;
+    return this.prisma.publication.findMany()
   }
 
   findOne(id: number) {

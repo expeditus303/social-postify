@@ -30,19 +30,19 @@ export class PublicationsService {
     return await this.publicationsRepository.create(createPublicationDto)
   }
 
-  findAll() {
-    return `This action returns all publications`;
+  async findAll() {
+    return await this.publicationsRepository.findAll()
   }
 
-  findOne(id: number) {
+  async findOne(id: number) {
     return `This action returns a #${id} publication`;
   }
 
-  update(id: number, updatePublicationDto: UpdatePublicationDto) {
+  async update(id: number, updatePublicationDto: UpdatePublicationDto) {
     return `This action updates a #${id} publication`;
   }
 
-  remove(id: number) {
+  async remove(id: number) {
     return `This action removes a #${id} publication`;
   }
 }

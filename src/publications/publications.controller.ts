@@ -14,7 +14,7 @@ export class PublicationsController {
 
   @Get()
   async findAll() {
-    return this.publicationsService.findAll();
+    return await this.publicationsService.findAll();
   }
 
   @Get(':id')
