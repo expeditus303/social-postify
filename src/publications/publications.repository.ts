@@ -5,17 +5,58 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class PublicationsRepository {
-  constructor(private readonly prisma: PrismaService) {}
 
+  constructor(private readonly prisma: PrismaService) {}
 
   create(createPublicationDto: CreatePublicationDto) {
     return this.prisma.publication.create({
-      data: createPublicationDto
-    })
+      data: createPublicationDto,
+    });
   }
 
   findAll() {
-    return this.prisma.publication.findMany()
+    return this.prisma.publication.findMany();
+  }
+
+  findPublished(currentDate: Date) {
+    return this.prisma.publication.findMany({
+      where: {
+        date: {
+          lt: currentDate,
+        },
+      },
+    });
+  }
+
+  findNotPublished(currentDate: Date) {
+    return this.prisma.publication.findMany({
+      where: {
+        date: {
+          gt: currentDate,
+        },
+      },
+    });
+  }
+
+  findPublishedAfterDate(currentDate: Date, afterDate: Date) {
+    return this.prisma.publication.findMany({
+      where: {
+        date: {
+          gte: afterDate,
+          lt: currentDate,
+        },
+      },
+    });
+  }
+
+  findNotPublishedAfterDate(latestDate: Date) {
+    return this.prisma.publication.findMany({
+      where: {
+        date: {
+          gte: latestDate,
+        },
+      },
+    });
   }
 
   findOne(id: number) {

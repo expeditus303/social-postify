@@ -14,10 +14,10 @@ export class PublicationsService {
   ) {}
 
   async create(createPublicationDto: CreatePublicationDto) {
-    const {mediaId, postId}  = createPublicationDto
+    const { mediaId, postId } = createPublicationDto;
 
-    const existingMediaById = await this.mediasService.findMediaById(mediaId)
-    const existingPostById = await this.postsService.findPostById(postId)
+    const existingMediaById = await this.mediasService.findMediaById(mediaId);
+    const existingPostById = await this.postsService.findPostById(postId);
 
     if (!existingMediaById) {
       throw new NotFoundException(`Media with ID ${mediaId} not found.`);
@@ -26,12 +26,49 @@ export class PublicationsService {
     if (!existingPostById) {
       throw new NotFoundException(`Post with ID ${postId} not found.`);
     }
-    
-    return await this.publicationsRepository.create(createPublicationDto)
+
+    return await this.publicationsRepository.create(createPublicationDto);
   }
 
-  async findAll() {
-    return await this.publicationsRepository.findAll()
+  async findAll(published: string, after: string) {
+    const currentDate = new Date();
+
+    if (published) {
+      if (published === 'true') {
+        if (after) {
+          const afterDate = new Date(after);
+
+          const publishedAfterDate =
+            await this.publicationsRepository.findPublishedAfterDate(
+              currentDate,
+              afterDate,
+            );
+
+          return publishedAfterDate;
+        }
+        const published =
+          await this.publicationsRepository.findPublished(currentDate);
+
+        return published;
+      } else if (published === 'false') {
+        if (after) {
+          const afterDate = new Date(after);
+          const latestDate = currentDate > afterDate ? currentDate : afterDate;
+
+          const notPublishedAfterDate =
+            await this.publicationsRepository.findNotPublishedAfterDate(latestDate);
+
+          return notPublishedAfterDate;
+        }
+
+        const notPublishedPublications =
+          await this.publicationsRepository.findNotPublished(currentDate);
+
+        return notPublishedPublications;
+      }
+    }
+
+    return await this.publicationsRepository.findAll();
   }
 
   async findOne(id: number) {

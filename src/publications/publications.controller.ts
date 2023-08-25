@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+} from '@nestjs/common';
 import { PublicationsService } from './publications.service';
 import { CreatePublicationDto } from './dto/create-publication.dto';
 import { UpdatePublicationDto } from './dto/update-publication.dto';
@@ -13,8 +22,11 @@ export class PublicationsController {
   }
 
   @Get()
-  async findAll() {
-    return await this.publicationsService.findAll();
+  async findAll(
+    @Query('published') published: string,
+    @Query('after') after: string,
+  ) {
+    return await this.publicationsService.findAll(published, after);
   }
 
   @Get(':id')
@@ -23,7 +35,10 @@ export class PublicationsController {
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() updatePublicationDto: UpdatePublicationDto) {
+  async update(
+    @Param('id') id: string,
+    @Body() updatePublicationDto: UpdatePublicationDto,
+  ) {
     return await this.publicationsService.update(+id, updatePublicationDto);
   }
 
