@@ -67,4 +67,8 @@ export class MediasService {
 
     return await this.mediasRepository.remove(id)
   }
+
+  async findMediaById(id: number) {
+    return await this.mediasRepository.findOne(id);
+  }
 }

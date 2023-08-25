@@ -45,4 +45,8 @@ export class PostsService {
 
     return await this.postsRepository.remove(id);
   }
+
+  async findPostById(id: number) {
+    return await this.postsRepository.findOne(id);
+  }
 }
