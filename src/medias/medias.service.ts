@@ -17,17 +17,10 @@ export class MediasService {
     @Inject(forwardRef(() => PublicationsService))
     private readonly publicationsService: PublicationsService,
     private readonly mediasRepository: MediasRepository,
-    ) {}
+  ) {}
 
   async create(createMediaDto: CreateMediaDto) {
-    const existingMedia =
-      await this.mediasRepository.findMediaByTitleAndUsername(createMediaDto);
-
-    if (existingMedia) {
-      throw new ConflictException(
-        'A media entry with this title and username already exists.',
-      );
-    }
+    await this.throwIfMediaWithTitleAndUsernameExists(createMediaDto);
 
     return await this.mediasRepository.create(createMediaDto);
   }
@@ -37,52 +30,55 @@ export class MediasService {
   }
 
   async findOne(id: number) {
-    const existingMediaById = await this.mediasRepository.findOne(id);
-
-    if (!existingMediaById) {
-      throw new NotFoundException(`Media with ID ${id} not found.`);
-    }
+    const existingMediaById = await this.findMediaOrThrow(id);
 
     return existingMediaById;
   }
 
   async update(id: number, updateMediaDto: UpdateMediaDto) {
-    const existingMediaById = await this.mediasRepository.findOne(id);
+    await this.findMediaOrThrow(id);
 
-    if (!existingMediaById) {
-      throw new NotFoundException(`Media with ID ${id} not found.`);
+    await this.throwIfMediaWithTitleAndUsernameExists(updateMediaDto);
+
+    return await this.mediasRepository.update(id, updateMediaDto);
+  }
+
+  async remove(id: number) {
+    await this.findMediaOrThrow(id);
+
+    const mediaHasPublication =
+      await this.publicationsService.findPublicationWithMediaId(id);
+
+    if (mediaHasPublication) {
+      throw new ForbiddenException(
+        `The media with ID ${id} is associated with a publication and cannot be deleted.`,
+      );
     }
 
-    const existingMedia =
-      await this.mediasRepository.findMediaByTitleAndUsername(updateMediaDto);
+    return await this.mediasRepository.remove(id);
+  }
 
+  async findMediaById(id: number) {
+    return await this.mediasRepository.findOne(id);
+  }
+
+  private async findMediaOrThrow(id: number) {
+    const media = await this.mediasRepository.findOne(id);
+    if (!media) {
+      throw new NotFoundException(`Media with ID ${id} not found.`);
+    }
+    return media;
+  }
+
+  private async throwIfMediaWithTitleAndUsernameExists(
+    dto: CreateMediaDto | UpdateMediaDto,
+  ) {
+    const existingMedia =
+      await this.mediasRepository.findMediaByTitleAndUsername(dto);
     if (existingMedia) {
       throw new ConflictException(
         'A media entry with this title and username already exists.',
       );
     }
-
-    return await this.mediasRepository.update(id, updateMediaDto)
-  }
-
-  // TODO só pode ser deletada se não estiver fazendo parte de nenhuma publicação (agendada ou publicada). Neste caso, retornar o status code 403 Forbidden.
-  async remove(id: number) {
-    const existingMediaById = await this.mediasRepository.findOne(id);
-
-    if (!existingMediaById) {
-      throw new NotFoundException(`Media with ID ${id} not found.`);
-    }
-
-    const mediaHasPublication = await this.publicationsService.findPublicationWithMediaId(id)
-
-    if (mediaHasPublication) {
-      throw new ForbiddenException(`The media with ID ${id} is associated with a publication and cannot be deleted.`);
-    }
-
-    return await this.mediasRepository.remove(id)
-  }
-
-  async findMediaById(id: number) {
-    return await this.mediasRepository.findOne(id);
   }
 }
