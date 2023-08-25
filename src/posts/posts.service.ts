@@ -21,7 +21,7 @@ export class PostsService {
     if (!existingPostById) {
       throw new NotFoundException(`Post with ID ${id} not found.`);
     }
-    
+
     return existingPostById;
   }
 
@@ -35,7 +35,14 @@ export class PostsService {
     return await this.postsRepository.update(id, updatePostDto);
   }
 
+  // TODO só pode ser deletada se não estiver fazendo parte de nenhuma publicação (agendada ou publicada). Neste caso, retornar o status code 403 Forbidden.
   async remove(id: number) {
-    return await `This action removes a #${id} post`;
+    const existingMediaById = await this.postsRepository.findOne(id);
+
+    if (!existingMediaById) {
+      throw new NotFoundException(`Post with ID ${id} not found.`);
+    }
+
+    return await this.postsRepository.remove(id);
   }
 }

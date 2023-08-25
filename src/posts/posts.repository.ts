@@ -28,17 +28,21 @@ export class PostsRepository {
   update(id: number, updatePostDto: UpdatePostDto) {
     return this.prisma.post.update({
       where: {
-        id
+        id,
       },
       data: {
         title: updatePostDto.title,
         text: updatePostDto.text,
-        image: 'image' in updatePostDto ? updatePostDto.image : null
-      }
-    })
+        image: 'image' in updatePostDto ? updatePostDto.image : null,
+      },
+    });
   }
 
   remove(id: number) {
-    return `This action removes a #${id} post`;
+    return this.prisma.post.delete({
+      where: {
+        id,
+      },
+    });
   }
 }
