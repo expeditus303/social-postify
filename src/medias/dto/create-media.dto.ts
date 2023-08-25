@@ -1,8 +1,9 @@
 import { SocialMediaPlatform } from '@prisma/client';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateMediaDto {
   @IsString()
+  @IsEnum(SocialMediaPlatform)
   @IsNotEmpty()
   title: SocialMediaPlatform;
 
