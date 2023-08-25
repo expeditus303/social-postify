@@ -27,37 +27,27 @@ export class PostsService {
   }
 
   async findOne(id: number) {
-    const existingPostById = await this.postsRepository.findOne(id);
-
-    if (!existingPostById) {
-      throw new NotFoundException(`Post with ID ${id} not found.`);
-    }
+    const existingPostById = await this.findPostOrThrow(id);
 
     return existingPostById;
   }
 
   async update(id: number, updatePostDto: UpdatePostDto) {
-    const existingPostById = await this.postsRepository.findOne(id);
-
-    if (!existingPostById) {
-      throw new NotFoundException(`Post with ID ${id} not found.`);
-    }
+    await this.findPostOrThrow(id);
 
     return await this.postsRepository.update(id, updatePostDto);
   }
 
-  // TODO só pode ser deletada se não estiver fazendo parte de nenhuma publicação (agendada ou publicada). Neste caso, retornar o status code 403 Forbidden.
   async remove(id: number) {
-    const existingMediaById = await this.postsRepository.findOne(id);
+    await this.findPostOrThrow(id);
 
-    if (!existingMediaById) {
-      throw new NotFoundException(`Post with ID ${id} not found.`);
-    }
-
-    const postHasPublication = await this.publicationsService.findPublicationWithPostId(id)
+    const postHasPublication =
+      await this.publicationsService.findPublicationWithPostId(id);
 
     if (postHasPublication) {
-      throw new ForbiddenException(`The post with ID ${id} is associated with a publication and cannot be deleted.`);
+      throw new ForbiddenException(
+        `The post with ID ${id} is associated with a publication and cannot be deleted.`,
+      );
     }
 
     return await this.postsRepository.remove(id);
@@ -65,5 +55,13 @@ export class PostsService {
 
   async findPostById(id: number) {
     return await this.postsRepository.findOne(id);
+  }
+
+  private async findPostOrThrow(id: number) {
+    const post = await this.postsRepository.findOne(id);
+    if (!post) {
+      throw new NotFoundException(`Post with ID ${id} not found.`);
+    }
+    return post;
   }
 }
