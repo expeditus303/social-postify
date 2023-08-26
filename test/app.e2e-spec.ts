@@ -6,6 +6,7 @@ import { PrismaModule } from '../src/prisma/prisma.module';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { createMedia } from './factories/medias.factory';
 import { generateRandomString } from './utils/generateRandomString';
+import { createPost } from './factories/posts.factory';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;
@@ -100,11 +101,12 @@ describe('AppController (e2e)', () => {
 
       const updatedMedia = {
         title: 'Instagram',
-        username: generateRandomString(10)
-      }
+        username: generateRandomString(10),
+      };
 
-      const { statusCode, body } = await request(app.getHttpServer()).put(
-        `/medias/${media.id}`).send(updatedMedia)
+      const { statusCode, body } = await request(app.getHttpServer())
+        .put(`/medias/${media.id}`)
+        .send(updatedMedia);
 
       expect(statusCode).toBe(HttpStatus.OK);
 
@@ -118,17 +120,126 @@ describe('AppController (e2e)', () => {
     it('/medias (DELETE) => should delete media by id', async () => {
       const media = await createMedia(prisma);
 
-      const { statusCode: statusCodeMediaExists } = await request(app.getHttpServer()).get(
-        `/medias/${media.id}`,
-      );
+      const { statusCode: statusCodeMediaExists } = await request(
+        app.getHttpServer(),
+      ).get(`/medias/${media.id}`);
 
       expect(statusCodeMediaExists).toBe(HttpStatus.OK);
 
+      await request(app.getHttpServer()).delete(`/medias/${media.id}`);
+
+      const { statusCode } = await request(app.getHttpServer()).get(
+        `/medias/${media.id}`,
+      );
+
+      expect(statusCode).toBe(HttpStatus.NOT_FOUND);
+    });
+  });
+
+  describe('/Posts CRUD', () => {
+    it('/posts (POST) => should create a new post with image', async () => {
+      const postData = {
+        title: 'Pepe de Frog',
+        text: 'why rigth-wing love him?',
+        image:
+          'https://www.rollingstone.com/wp-content/uploads/2020/07/Screen-Shot-2020-07-15-at-11.24.37-AM.jpg',
+      };
+
+      const { statusCode, body } = await request(app.getHttpServer())
+        .post('/posts')
+        .send(postData);
+
+      expect(statusCode).toBe(HttpStatus.CREATED);
+      expect(body).toMatchObject({
+        id: expect.any(Number),
+        title: postData.title,
+        text: postData.text,
+        image: postData.image,
+      });
+    });
+
+    it('/posts (GET) => should get all posts', async () => {
+      const post1 = await createPost(prisma);
+
+      const post2 = await createPost(prisma);
+
+      const { statusCode, body } = await request(app.getHttpServer()).get(
+        '/posts',
+      );
+
+      expect(statusCode).toBe(HttpStatus.OK);
+
+      expect(body).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: post1.id,
+            title: post1.title,
+            text: post1.text,
+            image: post1.image,
+          }),
+          expect.objectContaining({
+            id: post2.id,
+            title: post2.title,
+            text: post2.text,
+            image: post2.image,
+          }),
+        ]),
+      );
+    });
+
+    it('/posts/:id (GET) => should get post by id', async () => {
+      const post = await createPost(prisma);
+
+      const { statusCode, body } = await request(app.getHttpServer()).get(
+        `/posts/${post.id}`,
+      );
+
+      expect(statusCode).toBe(HttpStatus.OK);
+
+      expect(body).toMatchObject({
+        id: post.id,
+        title: post.title,
+        text: post.text,
+        image: post.image,
+      });
+    });
+
+    it('/posts (PUT) => should update a post by id', async () => {
+      const post = await createPost(prisma);
+
+      const updatedPostWithNoImage = {
+        title: generateRandomString(10),
+        text: generateRandomString(12),
+      };
+
+      const { statusCode, body } = await request(app.getHttpServer())
+        .put(`/posts/${post.id}`)
+        .send(updatedPostWithNoImage);
+
+      expect(statusCode).toBe(HttpStatus.OK);
+
+      expect(body).toMatchObject({
+        id: post.id,
+        title: updatedPostWithNoImage.title,
+        text: updatedPostWithNoImage.text,
+        image: null,
+      });
+    });
+
+    it('/posts (DELETE) => should delete a post by id', async () => {
+      const post = await createPost(prisma);
+
+      const { statusCode: statusCodePostExists } = await request(app.getHttpServer()).get(
+        `/posts/${post.id}`,
+      );
+
+      expect(statusCodePostExists).toBe(HttpStatus.OK);
+
       await request(app.getHttpServer()).delete(
-        `/medias/${media.id}`)
+        `/posts/${post.id}`)
 
         const { statusCode } = await request(app.getHttpServer()).get(
-          `/medias/${media.id}`,
+          `/medias/${post.id}`,
         );
 
       expect(statusCode).toBe(HttpStatus.NOT_FOUND);

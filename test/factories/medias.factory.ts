@@ -1,11 +1,3 @@
-// import { INestApplication } from '@nestjs/common';
-// import { CreateMediaDto } from 'src/medias/dto/create-media.dto';
-// import * as request from 'supertest';
-
-// export async function createMedia(app: INestApplication, data: CreateMediaDto) {
-//   return await request(app.getHttpServer()).post('/medias').send(data);
-// }
-
 import { SocialMediaPlatform } from '@prisma/client';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { generateRandomString } from '../utils/generateRandomString';
