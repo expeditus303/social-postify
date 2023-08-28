@@ -5,8 +5,11 @@ import { AppModule } from './../src/app.module';
 import { PrismaModule } from '../src/prisma/prisma.module';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { createMedia } from './factories/medias.factory';
-import { generateRandomString } from './utils/generateRandomString';
+import { generateRandomString } from './test-utils/generateRandomString.utils';
 import { createPost } from './factories/posts.factory';
+import { cleanDatabase } from './test-utils/prisma.utils';
+import { createPublication } from './factories/publications.factory';
+import { generateRandomFutureDate } from './test-utils/genrerateRandomDate';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;
@@ -21,9 +24,7 @@ describe('AppController (e2e)', () => {
     app.useGlobalPipes(new ValidationPipe());
     prisma = moduleFixture.get(PrismaService);
 
-    await prisma.publication.deleteMany();
-    await prisma.post.deleteMany();
-    await prisma.media.deleteMany();
+    await cleanDatabase(prisma);
 
     await app.init();
   });
@@ -124,14 +125,13 @@ describe('AppController (e2e)', () => {
         app.getHttpServer(),
       ).get(`/medias/${media.id}`);
 
-      expect(statusCodeMediaExists).toBe(HttpStatus.OK);
-
       await request(app.getHttpServer()).delete(`/medias/${media.id}`);
 
       const { statusCode } = await request(app.getHttpServer()).get(
         `/medias/${media.id}`,
       );
 
+      expect(statusCodeMediaExists).toBe(HttpStatus.OK);
       expect(statusCode).toBe(HttpStatus.NOT_FOUND);
     });
   });
@@ -229,19 +229,136 @@ describe('AppController (e2e)', () => {
     it('/posts (DELETE) => should delete a post by id', async () => {
       const post = await createPost(prisma);
 
-      const { statusCode: statusCodePostExists } = await request(app.getHttpServer()).get(
+      const { statusCode: statusCodePostExists } = await request(
+        app.getHttpServer(),
+      ).get(`/posts/${post.id}`);
+
+      await request(app.getHttpServer()).delete(`/posts/${post.id}`);
+
+      const { statusCode } = await request(app.getHttpServer()).get(
         `/posts/${post.id}`,
       );
 
       expect(statusCodePostExists).toBe(HttpStatus.OK);
+      expect(statusCode).toBe(HttpStatus.NOT_FOUND);
+    });
+  });
 
-      await request(app.getHttpServer()).delete(
-        `/posts/${post.id}`)
+  describe('/Publications CRUD', () => {
+    it('/publications (POST) => should create a new publication', async () => {
+      const media = await createMedia(prisma);
+      const post = await createPost(prisma);
 
-        const { statusCode } = await request(app.getHttpServer()).get(
-          `/medias/${post.id}`,
-        );
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
 
+      const formattedDate = tomorrow.toISOString();
+
+      const publication = {
+        mediaId: media.id,
+        postId: post.id,
+        date: formattedDate,
+      };
+
+      const { statusCode, body } = await request(app.getHttpServer())
+        .post('/publications')
+        .send(publication);
+
+      expect(statusCode).toBe(HttpStatus.CREATED);
+      expect(body).toMatchObject({
+        id: expect.any(Number),
+        mediaId: publication.mediaId,
+        postId: publication.postId,
+        date: publication.date,
+      });
+    });
+
+    it('/publications (GET) => should get all publications', async () => {
+      const publication1 = await createPublication(prisma);
+      const publication2 = await createPublication(prisma);
+
+      const { statusCode, body } = await request(app.getHttpServer()).get(
+        '/publications',
+      );
+
+      expect(statusCode).toBe(HttpStatus.OK);
+
+      console.log('Publication 1:', publication1);
+      console.log('Publication 2:', publication2);
+      console.log('Received body:', body);
+
+      expect(body).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: publication1.id,
+            mediaId: publication1.mediaId,
+            postId: publication1.postId,
+            date: publication1.date.toISOString(),
+          }),
+          expect.objectContaining({
+            id: publication2.id,
+            mediaId: publication2.mediaId,
+            postId: publication2.postId,
+            date: publication2.date.toISOString(),
+          }),
+        ]),
+      );
+    });
+
+    it('/publications/:id (GET) => should get publication by id', async () => {
+      const publication = await createPublication(prisma);
+
+      const { statusCode, body } = await request(app.getHttpServer()).get(
+        `/publications/${publication.id}`,
+      );
+
+      expect(statusCode).toBe(HttpStatus.OK);
+
+      expect(body).toMatchObject({
+        id: publication.id,
+        mediaId: publication.mediaId,
+        postId: publication.postId,
+        date: publication.date.toISOString(),
+      });
+    });
+
+    it('/publications (PUT) => should update a publication by id', async () => {
+      const publication = await createPublication(prisma);
+
+      const updatedPublication = {
+        mediaId: publication.mediaId,
+        postId: publication.postId,
+        date: generateRandomFutureDate(365)
+      };
+
+      const { statusCode, body } = await request(app.getHttpServer())
+        .put(`/publications/${publication.id}`)
+        .send(updatedPublication);
+
+      expect(statusCode).toBe(HttpStatus.OK);
+
+      expect(body).toMatchObject({
+        id: publication.id,
+        mediaId: updatedPublication.mediaId,
+        postId: updatedPublication.postId,
+        date: updatedPublication.date
+      });
+    });
+
+    it('/publications (DELETE) => should delete a publication by id', async () => {
+      const publication = await createPublication(prisma);
+
+      const { statusCode: statusCodePublicationExists } = await request(
+        app.getHttpServer(),
+      ).get(`/publications/${publication.id}`);
+
+      await request(app.getHttpServer()).delete(`/publications/${publication.id}`);
+
+      const { statusCode } = await request(app.getHttpServer()).get(
+        `/publications/${publication.id}`,
+      );
+
+      expect(statusCodePublicationExists).toBe(HttpStatus.OK);
       expect(statusCode).toBe(HttpStatus.NOT_FOUND);
     });
   });

@@ -1,6 +1,5 @@
-import { SocialMediaPlatform } from '@prisma/client';
 import { PrismaService } from '../../src/prisma/prisma.service';
-import { generateRandomString } from '../utils/generateRandomString';
+import { generateRandomString } from '../test-utils/generateRandomString.utils';
 
 export async function createPost(prisma: PrismaService) {
 
