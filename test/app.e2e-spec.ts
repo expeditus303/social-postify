@@ -15,18 +15,20 @@ describe('AppController (e2e)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule, PrismaModule],
     }).compile();
 
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(new ValidationPipe());
-    prisma = moduleFixture.get(PrismaService);
-
-    await cleanDatabase(prisma);
-
     await app.init();
+
+    prisma = moduleFixture.get(PrismaService);
+  });
+
+  beforeEach(async () => {
+    await cleanDatabase(prisma);
   });
 
   it('/health (GET)', async () => {
@@ -36,6 +38,96 @@ describe('AppController (e2e)', () => {
   });
 
   describe('/Medias CRUD', () => {
+    it('/medias (POST) => should throw bad request when title is not a Social Media', async () => {
+      const mediaData = {
+        title: generateRandomString(4),
+        username: 'elonmusk',
+      };
+
+      const { statusCode, body } = await request(app.getHttpServer())
+        .post('/medias')
+        .send(mediaData);
+
+      expect(statusCode).toBe(HttpStatus.BAD_REQUEST);
+      expect(body.message).toEqual(
+        expect.arrayContaining([
+          'title must be one of the following values: Twitter, Facebook, Instagram, TikTok',
+        ]),
+      );
+    });
+
+    it('/medias (POST) => should throw bad request when title not exists', async () => {
+      const mediaData = {
+        username: 'elonmusk',
+      };
+
+      const { statusCode, body } = await request(app.getHttpServer())
+        .post('/medias')
+        .send(mediaData);
+
+      expect(statusCode).toBe(HttpStatus.BAD_REQUEST);
+      expect(body.message).toEqual(
+        expect.arrayContaining([
+          "title should not be empty",
+          "title must be a string"
+        ]),
+      );
+    });
+
+    it('/medias (POST) => should throw bad request when username not exists', async () => {
+      const mediaData = {
+        title: 'Twitter',
+      };
+
+      const { statusCode, body } = await request(app.getHttpServer())
+        .post('/medias')
+        .send(mediaData);
+
+      expect(statusCode).toBe(HttpStatus.BAD_REQUEST);
+      expect(body.message).toEqual(
+        expect.arrayContaining([
+          "username should not be empty",
+          "username must be a string"
+        ]),
+      );
+    });
+
+    it('/medias (POST) => should throw bad request when username is not a string', async () => {
+      const mediaData = {
+        username: 4,
+        title: 'Twitter',
+      };
+
+      const { statusCode, body } = await request(app.getHttpServer())
+        .post('/medias')
+        .send(mediaData);
+
+      expect(statusCode).toBe(HttpStatus.BAD_REQUEST);
+      expect(body.message).toEqual(
+        expect.arrayContaining([
+          "username must be a string"
+        ]),
+      );
+    });
+
+    it('/medias (POST) => should throw bad request when title is not a string', async () => {
+      const mediaData = {
+        title: 4,
+        username: 'elonmusk',
+      };
+
+      const { statusCode, body } = await request(app.getHttpServer())
+        .post('/medias')
+        .send(mediaData);
+
+      expect(statusCode).toBe(HttpStatus.BAD_REQUEST);
+      expect(body.message).toEqual(
+        expect.arrayContaining([
+          "title must be a string"
+        ]),
+      );
+    });
+
     it('/medias (POST) => should create a new media', async () => {
       const mediaData = {
         title: 'Twitter',
@@ -283,10 +375,6 @@ describe('AppController (e2e)', () => {
 
       expect(statusCode).toBe(HttpStatus.OK);
 
-      console.log('Publication 1:', publication1);
-      console.log('Publication 2:', publication2);
-      console.log('Received body:', body);
-
       expect(body).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
@@ -328,7 +416,7 @@ describe('AppController (e2e)', () => {
       const updatedPublication = {
         mediaId: publication.mediaId,
         postId: publication.postId,
-        date: generateRandomFutureDate(365)
+        date: generateRandomFutureDate(365),
       };
 
       const { statusCode, body } = await request(app.getHttpServer())
@@ -341,7 +429,7 @@ describe('AppController (e2e)', () => {
         id: publication.id,
         mediaId: updatedPublication.mediaId,
         postId: updatedPublication.postId,
-        date: updatedPublication.date
+        date: updatedPublication.date,
       });
     });
 
@@ -352,7 +440,9 @@ describe('AppController (e2e)', () => {
         app.getHttpServer(),
       ).get(`/publications/${publication.id}`);
 
-      await request(app.getHttpServer()).delete(`/publications/${publication.id}`);
+      await request(app.getHttpServer()).delete(
+        `/publications/${publication.id}`,
+      );
 
       const { statusCode } = await request(app.getHttpServer()).get(
         `/publications/${publication.id}`,
